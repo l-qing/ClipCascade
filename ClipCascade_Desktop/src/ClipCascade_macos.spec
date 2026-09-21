@@ -22,6 +22,9 @@ if re.search(r'/lib(?:ssl|crypto)[^/\s]*\.dylib', linked_libraries):
         + linked_libraries
     )
 
+# Keep binaries and data inside the app bundle to avoid extraction on each launch
+# and keep certifi's CA bundle available throughout long-running sessions.
+
 a = Analysis(
     ['main.py'],
     pathex=[],
@@ -40,16 +43,14 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,  # binaries and data are collected by COLLECT below
     name='ClipCascade',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
-    runtime_tmpdir=None,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -58,8 +59,17 @@ exe = EXE(
     entitlements_file=None,
     icon=['../../logo/logo.icns'],
 )
-app = BUNDLE(
+coll = COLLECT(
     exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='ClipCascade',
+)
+app = BUNDLE(
+    coll,
     name='ClipCascade.app',
     icon='../../logo/logo.icns',
     bundle_identifier=None,
